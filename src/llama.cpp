@@ -15997,7 +15997,18 @@ static ggml_type llama_tensor_get_type(quantize_state_internal & qs, ggml_type n
 
     // TODO: avoid hardcoded tensor names - use the TN_* constants
     const llm_arch arch = qs.model.arch;
-    if (arch == LLM_ARCH_FLUX || arch == LLM_ARCH_SD1 || arch == LLM_ARCH_SDXL) { return img_tensor_get_type(qs, new_type, tensor, ftype); };
+    static bool printed_version = false;
+    if (arch == LLM_ARCH_FLUX || arch == LLM_ARCH_SD1 || arch == LLM_ARCH_SDXL) { 
+        if (!printed_version) {
+            fprintf(stderr, "\nllama-quantize version: flux-quant-b3600-modified\n");
+            fprintf(stderr, "  Based on llama.cpp: b3600\n");
+            fprintf(stderr, "  Forked and modified by: pollockjj\n");
+            fprintf(stderr, "  Source code: https://github.com/pollockjj/llama.cpp\n");
+            fprintf(stderr, "  Build timestamp: %s %s\n\n", __DATE__, __TIME__);
+            printed_version = true;
+        }
+        return img_tensor_get_type(qs, new_type, tensor, ftype); 
+    };
     const auto       tn = LLM_TN(arch);
 
     auto use_more_bits = [](int i_layer, int n_layers) -> bool {
