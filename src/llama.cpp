@@ -16002,6 +16002,7 @@ static ggml_type llama_tensor_get_type(quantize_state_internal & qs, ggml_type n
         if (!printed_version) {
             fprintf(stderr, "\nllama-quantize version: flux-quant-b3600-modified\n");
             fprintf(stderr, "  Based on llama.cpp: b3600\n");
+            fprintf(stderr, "  Based on patch: github.com/city96/ComfyUI-GGUF/df6f1ab39cb29768de68f32f3d939a422d6a300b\n");
             fprintf(stderr, "  Forked and modified by: pollockjj\n");
             fprintf(stderr, "  Source code: https://github.com/pollockjj/llama.cpp\n");
             fprintf(stderr, "  Build timestamp: %s %s\n\n", __DATE__, __TIME__);
