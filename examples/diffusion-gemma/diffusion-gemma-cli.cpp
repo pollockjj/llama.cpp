@@ -98,7 +98,7 @@ static void diffusion_configure_cuda_mmq_env(const common_params_diffusion & par
 }
 
 // apply the model's chat template to the user prompt (this is a chat-trained model)
-static std::string format_chat(llama_model * model, const std::string & prompt) {
+static std::string format_chat(llama_model * model, const std::string & prompt, bool enable_thinking) {
     auto tmpls = common_chat_templates_init(model, "");
     common_chat_templates_inputs inputs;
     common_chat_msg user;
@@ -106,22 +106,27 @@ static std::string format_chat(llama_model * model, const std::string & prompt) 
     user.content = prompt;
     inputs.messages.push_back(user);
     inputs.add_generation_prompt = true;
+    inputs.enable_thinking = enable_thinking;
     return common_chat_templates_apply(tmpls.get(), inputs).prompt;
 }
 
 static void diffusion_gemma_print_usage(int, char **) {
     printf("\nDiffusion-Gemma options:\n");
     printf("  --diffusion-timing                    print diffusion decode/sample timing breakdown\n");
+    printf("  --no-thinking                         render chat template with enable_thinking=false\n");
 }
 
 int main(int argc, char ** argv) {
     bool log_step_timing = false;
+    bool enable_thinking = true;
     std::vector<char *> fwd;
     fwd.push_back(argv[0]);
     for (int i = 1; i < argc; ++i) {
         const std::string arg = argv[i];
         if (arg == "--diffusion-timing") {
             log_step_timing = true;
+        } else if (arg == "--no-thinking" || arg == "--disable-thinking") {
+            enable_thinking = false;
         } else {
             fwd.push_back(argv[i]);
         }
@@ -232,7 +237,7 @@ int main(int argc, char ** argv) {
         }
 
         // chat-format with the image marker(s) prepended to the user content
-        const std::string formatted = format_chat(model, markers + params.prompt);
+        const std::string formatted = format_chat(model, markers + params.prompt, enable_thinking);
         LOG_INF("formatted prompt: %s\n", formatted.c_str());
 
         mtmd_input_text text;
@@ -249,7 +254,7 @@ int main(int argc, char ** argv) {
     } else {
         // text-only: chat-format and tokenize (turn/channel special tokens)
         if (!params.prompt.empty()) {
-            const std::string formatted = format_chat(model, params.prompt);
+            const std::string formatted = format_chat(model, params.prompt, enable_thinking);
             LOG_INF("formatted prompt: %s\n", formatted.c_str());
             prompt_tokens = common_tokenize(vocab, formatted, /*add_special*/ false, /*parse_special*/ true);
         }
