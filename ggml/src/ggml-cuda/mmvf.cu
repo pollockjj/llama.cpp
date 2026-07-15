@@ -784,6 +784,19 @@ void ggml_cuda_op_mul_mat_vec_f(
 }
 
 bool ggml_cuda_should_use_mmvf(enum ggml_type type, int cc, const int64_t * src0_ne, const size_t * src0_nb, int64_t ne11) {
+    static const bool disable_mmvf = []() {
+        const char * value = getenv("GGML_CUDA_DISABLE_MMVF");
+        const bool disabled = value != nullptr && std::atoi(value) != 0;
+        if (disabled) {
+            GGML_LOG_INFO("Detected GGML_CUDA_DISABLE_MMVF\n");
+        }
+        return disabled;
+    }();
+
+    if (disable_mmvf) {
+        return false;
+    }
+
     if (src0_ne[0] % 2 != 0) {
         return false;
     }
